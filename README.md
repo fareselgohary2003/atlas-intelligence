@@ -10,7 +10,7 @@ Instead of treating research as a single conversation with a language model, Atl
 
 The platform is built around **traceability, evidence quality, explicit uncertainty, and controlled agent execution**.
 
-> **Project status:** The core research engine and selected application logic have automated test coverage. Database integrations, API runtime, background workers, Docker deployment, and live external-provider integrations remain unverified until the documented runtime checks have been executed. See [`docs/UNVERIFIED.md`](docs/UNVERIFIED.md) for details.
+> **Project Status:** The core research engine and selected application logic have automated test coverage. Database integrations, API runtime, background workers, Docker deployment, and live external-provider integrations remain unverified until the documented runtime checks have been executed. See [`docs/UNVERIFIED.md`](docs/UNVERIFIED.md) for details.
 
 ---
 
@@ -25,20 +25,16 @@ The platform is built around **traceability, evidence quality, explicit uncertai
 * [Verification and Conflict Detection](#verification-and-conflict-detection)
 * [Research Gaps and Replanning](#research-gaps-and-replanning)
 * [Report Generation](#report-generation)
-* [Application Interface](#application-interface)
 * [Technology Stack](#technology-stack)
-* [Architecture](#architecture)
-* [Repository Structure](#repository-structure)
 * [Getting Started](#getting-started)
-* [Running the Offline Demo](#running-the-offline-demo)
+* [Demo Mode](#demo-mode)
 * [Configuration](#configuration)
 * [Testing](#testing)
 * [Security](#security)
-* [Observability](#observability)
 * [Known Limitations](#known-limitations)
 * [Unverified Components](#unverified-components)
 * [Roadmap](#roadmap)
-* [Contributing](#contributing)
+* [Author](#author)
 * [License](#license)
 
 ---
@@ -57,47 +53,45 @@ The resulting report distinguishes sourced findings from analytical inferences a
 
 * **Evidence before conclusions:** Factual findings should be linked to stored evidence and source records.
 * **Traceability:** Research outputs should be auditable from the final report back to the underlying evidence.
-* **Explicit uncertainty:** Unsupported claims, conflicting information, and research gaps should be visible.
+* **Explicit uncertainty:** Unsupported claims, conflicting information, and research gaps should remain visible.
 * **Controlled autonomy:** Agents operate through registered capabilities and explicit tool permissions.
-* **Bounded execution:** Retries, cancellation, and replanning should follow defined execution rules.
-* **Honest reporting:** Demo data, estimated costs, and unverified integrations must not be presented as confirmed production results.
+* **Bounded execution:** Retries, cancellation, and replanning follow defined execution rules.
+* **Honest reporting:** Demo data and unverified integrations must not be presented as confirmed production results.
 
-Atlas is designed as a research workflow platform, not simply a conversational interface. Its actual runtime capabilities depend on the configured services and the validation status documented in the repository.
+Atlas is designed as a research workflow platform, not simply a conversational interface.
 
 ---
 
 ## Key Features
 
-### 1. Multi-Agent Research Orchestration
+### Multi-Agent Research Orchestration
 
 * Decompose complex research objectives into specialized tasks.
 * Represent task dependencies and execution state.
 * Execute independent tasks concurrently where supported.
 * Track task progress, failures, and execution events.
 * Support pause, resume, and cancellation workflows in the implemented orchestration architecture.
-* Limit replanning through a configurable maximum.
+* Bound retries and replanning to avoid uncontrolled execution.
 
-### 2. Specialized Research Agents
+### Specialized Research Agents
 
 The platform defines nine agent roles:
 
-* Research Manager
-* Market Research Agent
-* Customer and Demand Agent
-* Competitor Intelligence Agent
-* Pricing Research Agent
-* Regulation Research Agent
-* Risk Analysis Agent
-* Fact Checker
-* Analyst Agent
+1. Research Manager
+2. Market Research Agent
+3. Customer and Demand Agent
+4. Competitor Intelligence Agent
+5. Pricing Research Agent
+6. Regulation Research Agent
+7. Risk Analysis Agent
+8. Fact Checker
+9. Analyst Agent
 
-Each agent has defined capabilities and an allow-list of tools. Tool access follows a default-deny model rather than allowing every agent to invoke every available tool.
+Each agent has defined capabilities and an allow-list of tools. Tool access follows a default-deny model.
 
-### 3. Source Collection and Extraction
+### Source Collection and Extraction
 
-The research tool layer is designed to support:
-
-* Configurable web search providers.
+* Configurable web-search providers.
 * URL fetching and content extraction.
 * Source URL normalization.
 * Duplicate-source handling.
@@ -106,19 +100,19 @@ The research tool layer is designed to support:
 * Redirect validation.
 * SSRF protections for external fetching.
 
-Real-world source retrieval depends on the provider configuration and must be validated against the live service.
+Real-world source retrieval depends on provider configuration and requires live integration testing.
 
-### 4. Evidence and Claim Management
+### Evidence and Claim Management
 
 * Store sources separately from extracted evidence.
 * Associate evidence with research claims.
-* Require evidence excerpts to match text in the stored source content.
+* Require evidence excerpts to match text in stored source content.
 * Track evidence quality.
 * Preserve claim verification status.
 * Identify supporting and contradicting evidence.
-* Maintain research-level data isolation in the implemented integrity design.
+* Enforce research-level data isolation through the implemented integrity design.
 
-### 5. Fact Verification
+### Fact Verification
 
 The verification architecture combines deterministic integrity checks with optional language-model-assisted assessment.
 
@@ -129,11 +123,11 @@ Verification outcomes include:
 * `contradicted`
 * `insufficient_evidence`
 
-The intended workflow checks evidence grounding, research scope, numeric support, corroboration, contradictions, source quality, and freshness where applicable.
+The intended workflow evaluates evidence grounding, research scope, numeric support, corroboration, contradictions, source quality, and freshness where applicable.
 
-A model-generated assessment is not a substitute for source evidence or the integrity checks enforced by the application.
+A model-generated assessment is not a substitute for source evidence or application-level integrity checks.
 
-### 6. Conflict Detection
+### Conflict Detection
 
 The conflict system is designed to distinguish substantive contradictions from differences in research scope.
 
@@ -149,7 +143,7 @@ Potential classifications include:
 
 Different market estimates should not automatically be treated as contradictory when they measure different periods, populations, geographies, or market definitions.
 
-### 7. Evidence-Aware Replanning
+### Evidence-Aware Replanning
 
 The Research Manager can request additional research when important gaps remain.
 
@@ -161,9 +155,9 @@ Supported replanning reason identifiers include:
 * `CONFLICT_DETECTED`
 * `MISSING_DIMENSION`
 
-Replanning is bounded by `MAX_REPLANS` to prevent unbounded research loops.
+Replanning is bounded by `MAX_REPLANS`.
 
-### 8. Executive Report Generation
+### Executive Report Generation
 
 The reporting layer is designed to produce structured reports containing:
 
@@ -181,9 +175,9 @@ The reporting layer is designed to produce structured reports containing:
 * Evidence quality.
 * Source references.
 
-Factual findings should remain traceable to stored claims and evidence. Analytical inferences and uncertainties should be explicitly labelled rather than presented as independently verified facts.
+Factual findings should remain traceable to stored claims and evidence. Analytical inferences and uncertainties should be explicitly labelled.
 
-### 9. Report Export
+### Report Export
 
 Implemented export formats include:
 
@@ -191,27 +185,25 @@ Implemented export formats include:
 * JSON.
 * PDF.
 
-Export correctness, formatting, citation preservation, and language support should be checked against the actual runtime implementation. The current PDF implementation has a documented limitation with Arabic text; see [Known Limitations](#known-limitations).
+Export correctness, citation preservation, formatting, and language support require validation against the running application.
 
-### 10. Usage and Cost Tracking
+### Usage and Cost Tracking
 
 The platform includes usage-metering functionality for model calls.
 
 Depending on provider response data and configuration, tracked information can include:
 
 * Model and provider.
-* Input tokens.
-* Output tokens.
-* Total tokens.
+* Input and output tokens.
 * Execution duration.
 * Errors.
 * Estimated cost.
 
-Unknown token counts or unavailable pricing should not be treated as confirmed zero usage or zero cost.
+Unknown token counts and unavailable pricing should not be treated as confirmed zero usage or zero cost.
 
-### 11. Auditability and Observability
+### Auditability and Observability
 
-The application includes architecture and implementation for:
+The architecture includes support for:
 
 * Structured JSON logs.
 * Request and execution correlation identifiers.
@@ -219,15 +211,7 @@ The application includes architecture and implementation for:
 * Audit events.
 * Execution error metadata.
 
-The extent of end-to-end runtime coverage must be confirmed using the documented validation procedures.
-
-### 12. Deterministic Demo Mode
-
-Demo mode is designed to demonstrate the research workflow without requiring live external search or language-model services.
-
-It uses fictional sources on the reserved `.invalid` top-level domain and marks demo records as `is_demo`.
-
-Demo records must remain clearly identifiable as `MOCK` or `DEMO` and must never be interpreted as real market research.
+End-to-end runtime behavior must be confirmed using the documented validation procedures.
 
 ---
 
@@ -252,15 +236,13 @@ The intended research workflow covers:
 9. Unresolved questions and research gaps.
 10. An executive report with traceable citations.
 
-The system should distinguish verified source material from estimates, hypotheses, and analytical inferences.
+The system should distinguish sourced findings from estimates, hypotheses, and analytical inferences.
 
-The example can run against the deterministic demo corpus or, after provider configuration and runtime validation, against real external sources.
+The workflow can be demonstrated using the deterministic demo corpus. Real external research requires configured providers and successful runtime validation.
 
 ---
 
 ## How It Works
-
-The conceptual research pipeline is:
 
 ```text
 Research Question
@@ -311,11 +293,9 @@ Fact Checker
          Markdown / JSON / PDF
 ```
 
-This diagram describes the intended architecture. Individual integrations and the complete end-to-end production workflow remain subject to the runtime validation documented in `docs/UNVERIFIED.md`.
+This diagram describes the intended research architecture. Individual integrations and the complete production workflow remain subject to runtime validation.
 
 ### Source-to-Report Traceability
-
-The intended traceability chain is:
 
 ```text
 Source
@@ -339,12 +319,10 @@ A report finding should not be treated as verified merely because a language mod
 
 ## Agent Architecture
 
-The project defines nine agent roles.
-
 | Agent                         | Responsibility                                                                        |
 | ----------------------------- | ------------------------------------------------------------------------------------- |
 | Research Manager              | Plans research tasks, coordinates execution, and requests bounded follow-up research. |
-| Market Research Agent         | Investigates market structure, market estimates, and industry trends.                 |
+| Market Research Agent         | Investigates market structure, estimates, and industry trends.                        |
 | Customer and Demand Agent     | Investigates customer needs, adoption drivers, and demand evidence.                   |
 | Competitor Intelligence Agent | Collects and compares competitor information.                                         |
 | Pricing Research Agent        | Investigates pricing models and available pricing evidence.                           |
@@ -355,7 +333,7 @@ The project defines nine agent roles.
 
 Agent definitions specify capabilities and permitted tools. Tool execution is routed through the shared tool registry.
 
-For additional implementation details, see [`docs/AGENTS.md`](docs/AGENTS.md).
+See [`docs/AGENTS.md`](docs/AGENTS.md) for implementation details.
 
 ---
 
@@ -365,7 +343,7 @@ Atlas separates sources, evidence, claims, and verification records.
 
 ### Sources
 
-A source represents retrieved or otherwise registered source material. Its metadata may include a URL, publisher, content hash, and retrieval information.
+A source represents retrieved or registered source material. Metadata may include its URL, publisher, content hash, and retrieval information.
 
 ### Evidence
 
@@ -381,15 +359,13 @@ Claims represent statements proposed from research findings. Creating a claim do
 
 Verification records capture the result of evaluating a claim against available evidence and applicable checks.
 
-The implemented design includes append-only verification records and database integrity protections intended to prevent cross-research references.
+The design includes append-only verification records and database integrity protections intended to prevent cross-research references.
 
-See [`docs/EVIDENCE.md`](docs/EVIDENCE.md) for implementation details and documented limitations.
+See [`docs/EVIDENCE.md`](docs/EVIDENCE.md).
 
 ---
 
 ## Verification and Conflict Detection
-
-Verification outcomes describe how well available evidence supports a claim.
 
 | Outcome                 | Meaning                                                                                |
 | ----------------------- | -------------------------------------------------------------------------------------- |
@@ -398,20 +374,13 @@ Verification outcomes describe how well available evidence supports a claim.
 | `contradicted`          | Relevant evidence conflicts with the claim.                                            |
 | `insufficient_evidence` | Available evidence is not sufficient to establish the claim.                           |
 
-These outcomes should not be confused with a guarantee that a statement is universally true. Verification quality depends on source reliability, evidence coverage, research scope, and the implemented validation rules.
+These outcomes do not guarantee that a statement is universally true. Verification quality depends on source reliability, evidence coverage, research scope, and the implemented evaluation rules.
 
 ### Conflict Classification
 
-The platform is designed to investigate why two findings disagree.
+Two findings may disagree because they refer to different years, market definitions, countries, customer segments, or methodologies.
 
-For example, two market estimates might differ because:
-
-* They refer to different years.
-* One measures SaaS revenue while another measures the broader cloud market.
-* They cover different countries or customer segments.
-* They use different market-sizing methodologies.
-
-Such differences should be explained before treating the estimates as direct contradictions.
+The platform is designed to investigate these differences before treating them as direct contradictions.
 
 ---
 
@@ -420,8 +389,6 @@ Such differences should be explained before treating the estimates as direct con
 A research task can expose missing evidence, low-quality sources, unsupported claims, or conflicting findings.
 
 The Research Manager can use these signals to request additional research, subject to the configured replanning limit.
-
-This approach is intended to reduce the risk of producing a confident report when critical questions remain unanswered.
 
 Research gaps should remain visible in the final report rather than being silently converted into assumptions.
 
@@ -444,13 +411,9 @@ A report may include:
 * Regulation.
 * Risk Analysis.
 * Opportunities.
-* Conflicts.
-* Uncertainties.
+* Conflicts and Uncertainties.
 * Evidence Quality.
-* Conclusion.
 * Sources.
-
-Reports should preserve source references and verification status so readers can distinguish what the evidence supports from what remains an analytical interpretation.
 
 ### Export Formats
 
@@ -460,55 +423,11 @@ Reports should preserve source references and verification status so readers can
 | JSON     | Structured downstream processing and integration.     |
 | PDF      | Sharing executive reports as documents.               |
 
-See the documented export limitations before relying on PDF output for Arabic-language reports.
-
----
-
-## Application Interface
-
-The frontend is designed around a research workspace rather than a conventional chat window.
-
-The application includes interface areas for:
-
-* Dashboard.
-* Research projects.
-* Live Research Workspace.
-* Research Plan.
-* Agent Activity.
-* Evidence.
-* Claims.
-* Sources.
-* Reports.
-* Agents.
-* Audit Log.
-* Settings.
-* Evidence Graph.
-
-The live workspace is designed to display research execution and evidence relationships. Actual integration with backend events and persisted data must be validated in a running environment.
-
-### Screenshots and Demo
-
-Add screenshots or a short recording of the actual application here once available.
-
-Recommended assets:
-
-```text
-docs/
-  screenshots/
-    dashboard.png
-    research-workspace.png
-    evidence-explorer.png
-    claims.png
-    report.png
-```
-
-Only include screenshots that represent the current implementation. Clearly label screenshots containing demo data.
+**Known limitation:** The current PDF export is documented as Latin-1 only, so Arabic characters may appear as question marks.
 
 ---
 
 ## Technology Stack
-
-The repository is organized around the following technologies.
 
 | Layer                             | Technology                                 |
 | --------------------------------- | ------------------------------------------ |
@@ -520,77 +439,12 @@ The repository is organized around the following technologies.
 | Database                          | PostgreSQL                                 |
 | Background execution              | Celery                                     |
 | Broker and caching infrastructure | Redis                                      |
-| Research sources                  | Configurable web search and fetch adapters |
-| Reporting                         | Markdown, JSON, and PDF export             |
+| Research sources                  | Configurable web-search and fetch adapters |
+| Reporting                         | Markdown, JSON, PDF                        |
 | Testing                           | Python unit tests and Node-based tests     |
 | Deployment                        | Docker and Docker Compose                  |
 
-The table describes the repository's intended stack. It does not mean every dependency, service, or deployment path has been run successfully in the target environment.
-
----
-
-## Architecture
-
-The application separates research orchestration, agent logic, tool execution, evidence services, persistence, and the user interface.
-
-### Backend
-
-The backend contains the research engine, agents, tool registry, source retrieval, evidence management, verification logic, report generation, and API components.
-
-### Frontend
-
-The frontend provides the dashboard, research forms, execution workspace, evidence views, claims, reports, and graph visualization.
-
-### Persistence
-
-PostgreSQL is the intended persistent store for research projects, tasks, events, sources, evidence, claims, verification results, conflicts, and related records.
-
-### Background Execution
-
-Celery and Redis are intended to support background research execution.
-
-### External Providers
-
-Production mode uses configured language-model and search providers. Live provider compatibility, authentication, rate limits, and response behavior require real runtime tests.
-
----
-
-## Repository Structure
-
-The main repository areas are:
-
-```text
-.
-├── apps/
-│   ├── api/
-│   │   └── app/
-│   │       ├── agents/
-│   │       ├── tools/
-│   │       ├── evidence/
-│   │       ├── reporting/
-│   │       ├── services/
-│   │       ├── repositories/
-│   │       ├── api/
-│   │       └── migrations/
-│   └── web/
-├── docs/
-│   ├── AGENTS.md
-│   ├── EVIDENCE.md
-│   ├── SECURITY.md
-│   ├── TOOLS.md
-│   ├── DEMO.md
-│   └── UNVERIFIED.md
-├── scripts/
-│   ├── run_tests.sh
-│   ├── gen_api_doc.py
-│   └── audit_repo.py
-├── .env.example
-├── .gitignore
-├── docker-compose.yml
-└── README.md
-```
-
-This is a structural overview. Check the actual repository before relying on any path or assuming that every listed module exists in the current revision.
+This table describes the repository's intended stack. It does not imply that every dependency, service, or deployment path has been successfully executed.
 
 ---
 
@@ -607,26 +461,24 @@ For the full containerized application, the documented setup expects:
 
 Production mode additionally requires valid credentials for the configured language-model and web-search providers.
 
-The complete Docker startup flow has not been verified in the authoring environment. Follow `docs/UNVERIFIED.md` for the latest validation status and any required troubleshooting.
+The complete Docker startup flow has not been verified in the authoring environment. See [`docs/UNVERIFIED.md`](docs/UNVERIFIED.md) for outstanding validation steps.
 
 ### 1. Clone the Repository
 
 ```bash
-git clone https://github.com/YOUR_USERNAME/atlas-intelligence.git
+git clone https://github.com/fareselgohary2003/atlas-intelligence.git
 cd atlas-intelligence
 ```
 
-Replace `YOUR_USERNAME` with your GitHub username.
-
 ### 2. Configure Environment Variables
 
-Copy the example configuration:
+Linux, macOS, Git Bash, or WSL:
 
 ```bash
 cp .env.example .env
 ```
 
-On Windows PowerShell, you can use:
+Windows PowerShell:
 
 ```powershell
 Copy-Item .env.example .env
@@ -634,7 +486,7 @@ Copy-Item .env.example .env
 
 Review `.env.example` and the setup documentation before starting the services.
 
-Use unique, strong secrets for local and production environments. Never commit the actual `.env` file or real credentials.
+Use unique, strong secrets for your environment. Never commit the real `.env` file or API credentials.
 
 ### 3. Start the Application
 
@@ -646,26 +498,26 @@ docker compose up --build
 
 The intended service layout includes the database, Redis, API, background worker, and web frontend.
 
-**Runtime status:** This command was not executed in the authoring sandbox. Do not assume that the complete stack starts successfully until it has been run and validated on your machine.
+**Runtime status:** The complete Docker workflow was not executed in the authoring sandbox. Validate it locally before assuming the entire stack starts successfully.
 
 ### 4. Open the Application
 
-The configured development endpoints are documented as:
+The documented endpoints are:
 
-* Web application: `http://localhost:3000`
-* API documentation: `http://localhost:8000/docs`
+* Web application: http://localhost:3000
+* API documentation: http://localhost:8000/docs
 
 Confirm the actual ports and service health after startup.
 
 ---
 
-## Running the Offline Demo
+## Demo Mode
 
-Atlas includes a deterministic demo mode intended to demonstrate the research workflow without a live LLM API or external web-search service.
+Atlas includes a deterministic demo mode intended to demonstrate the research workflow without requiring live LLM or external search services.
 
-Consult [`docs/DEMO.md`](docs/DEMO.md) for the exact environment variables and startup instructions.
+Consult [`docs/DEMO.md`](docs/DEMO.md) for the exact startup commands and configuration.
 
-The documented configuration uses:
+The documented demo configuration uses:
 
 ```dotenv
 DEMO_MODE=true
@@ -673,40 +525,36 @@ WEB_SEARCH_PROVIDER=demo
 LLM_PROVIDER=demo
 ```
 
-Check `.env.example` and `docs/DEMO.md` for the complete configuration expected by the current implementation.
+Check `.env.example` for the complete set of variables expected by the current implementation.
 
 ### Demo Data Policy
 
 Demo sources use fictional content and reserved `.invalid` domains.
 
-All demo records should be marked as `is_demo` and presented as `MOCK` or `DEMO` in the interface and generated reports.
+Demo records should be marked as `is_demo` and displayed as `MOCK` or `DEMO` in the interface and generated reports.
 
-Demo statistics and findings are not real market data and must not be used as factual business research.
+**Demo statistics and findings are fictional and must not be interpreted as real market research.**
 
 ---
 
 ## Configuration
 
-The project uses environment variables for application settings, credentials, provider selection, and infrastructure connectivity.
+Review `.env.example` for the authoritative list of supported environment variables.
 
-Review `.env.example` for the authoritative list of supported variables.
+Configuration areas include:
 
-Typical configuration areas include:
-
-| Configuration area          | Purpose                                                         |
-| --------------------------- | --------------------------------------------------------------- |
-| Demo mode                   | Select deterministic mock execution or production integrations. |
-| LLM provider                | Configure the language-model adapter.                           |
-| LLM credentials             | Authenticate to the selected model service.                     |
-| LLM model and base URL      | Select the model and compatible API endpoint.                   |
-| Web-search provider         | Select the search adapter.                                      |
-| Web-search credentials      | Authenticate to the configured search service.                  |
-| Database URL                | Configure PostgreSQL connectivity.                              |
-| Redis URL                   | Configure broker and rate-limiting infrastructure.              |
-| Session and cookie settings | Configure authentication and secure cookie behavior.            |
-| Cost configuration          | Supply pricing information when cost estimation is required.    |
-
-Do not copy example values into a public production deployment without reviewing their security implications.
+| Area                        | Purpose                                              |
+| --------------------------- | ---------------------------------------------------- |
+| Demo mode                   | Select demo or production integrations.              |
+| LLM provider                | Configure the language-model adapter.                |
+| LLM credentials             | Authenticate to the selected model service.          |
+| Model and base URL          | Select the model and API endpoint.                   |
+| Web-search provider         | Select the search adapter.                           |
+| Web-search credentials      | Authenticate to the configured search service.       |
+| Database URL                | Configure PostgreSQL connectivity.                   |
+| Redis URL                   | Configure broker and rate-limiting infrastructure.   |
+| Session and cookie settings | Configure authentication and secure cookie behavior. |
+| Cost configuration          | Supply pricing information for cost estimation.      |
 
 ### Production Mode
 
@@ -720,19 +568,17 @@ Live model behavior and live web-search integration remain unverified until test
 
 ## Testing
 
-The project includes automated tests for core research logic and selected frontend logic.
+The project documentation records the following test results from the authoring environment:
 
-The recorded test status in the current project documentation is:
+| Test group                                            | Recorded result        |
+| ----------------------------------------------------- | ---------------------- |
+| Python tests executed                                 | 214 passed, 0 failures |
+| Node tests executed                                   | 9 passed, 0 failures   |
+| Additional test functions for unverified integrations | 40 not executed        |
 
-| Test group                                                    | Recorded result        |
-| ------------------------------------------------------------- | ---------------------- |
-| Python tests executed in the authoring sandbox                | 214 passed, 0 failures |
-| Node tests executed in the authoring sandbox                  | 9 passed, 0 failures   |
-| Additional test functions written for unverified integrations | 40 not executed        |
+These are recorded results, not a guarantee that every test has been rerun against the latest repository revision.
 
-**These are recorded results, not a guarantee that every test has been rerun against the latest repository revision.** Run the commands again to confirm the current state.
-
-### Run the Available Test Script
+### Run the Test Script
 
 From the repository root:
 
@@ -740,30 +586,29 @@ From the repository root:
 bash scripts/run_tests.sh
 ```
 
-On Windows, use a compatible shell such as Git Bash or WSL if required by the script.
+On Windows, use Git Bash or WSL if required by the script.
 
-The script and its dependency requirements should be checked before execution. The exact test groups it runs may differ from the groups listed above.
+Check the script's dependencies and output to confirm exactly which test groups were executed.
 
 ### Additional Validation
 
-Before claiming that the full application works, validate the following where the necessary dependencies and services are available:
+Before treating the full application as production-ready, validate:
 
-* PostgreSQL migrations.
-* SQL repository contracts.
-* FastAPI route tests.
-* Authentication and authorization.
-* SSE streaming.
+* PostgreSQL migrations and constraints.
+* SQL repository integration tests.
+* FastAPI routes and authorization.
+* SSE streaming and reconnect behavior.
 * Celery worker execution.
 * Redis behavior.
 * Frontend dependency installation and production build.
 * Docker image builds.
 * Docker Compose startup and health checks.
-* End-to-end demo execution.
+* End-to-end research execution.
 * Real search-provider integration.
 * Real LLM integration.
 * Report export integrity.
 
-For exact unverified commands, see [`docs/UNVERIFIED.md`](docs/UNVERIFIED.md).
+See [`docs/UNVERIFIED.md`](docs/UNVERIFIED.md) for outstanding checks.
 
 ---
 
@@ -783,61 +628,33 @@ The implementation includes security components intended to support:
 * Rate limiting.
 * Secret redaction in logs.
 * Database integrity constraints.
-* Verifiable evidence grounding.
-
-### Security Limitations
+* Source-grounded evidence validation.
 
 The presence of security code does not establish that every deployment configuration is secure.
 
-Validate the actual runtime configuration, authentication flows, cookie flags, CSRF enforcement, rate limiting, database permissions, and cross-workspace authorization before exposing the application publicly.
+Validate authentication flows, cookie flags, CSRF enforcement, rate limiting, database permissions, and cross-workspace authorization before exposing the application publicly.
 
-See [`docs/SECURITY.md`](docs/SECURITY.md) for additional details and known limitations.
-
----
-
-## Observability
-
-The observability architecture uses structured logs and correlation identifiers to help trace execution across application components.
-
-The intended trace follows:
-
-```text
-Request
-  -> Research
-    -> Task
-      -> Agent Run
-        -> Tool Execution
-          -> Source
-            -> Evidence
-              -> Claim
-                -> Verification
-```
-
-This structure is intended to make failures easier to investigate and to preserve context across a research run.
-
-Logs should not contain API keys, session tokens, or unnecessary sensitive content.
-
-End-to-end correlation and audit completeness must be verified in a running environment.
+See [`docs/SECURITY.md`](docs/SECURITY.md).
 
 ---
 
 ## Known Limitations
 
-The following limitations are recorded in the current project description and should be reviewed against the latest implementation.
-
 ### Runtime Validation
 
-* PostgreSQL migrations and SQL repositories have not been executed in the authoring sandbox.
-* FastAPI routes and SSE behavior have not been fully runtime-validated there.
-* Celery and Redis worker execution have not been validated there.
-* The full Next.js application and Docker deployment have not been executed there.
-* Live LLM and web-search provider adapters have not been tested against real services there.
+The following areas have not been fully validated in the authoring environment:
+
+* PostgreSQL migrations and SQL repositories.
+* FastAPI routes and SSE behavior.
+* Celery and Redis worker execution.
+* The complete Next.js application and Docker deployment.
+* Live LLM and web-search provider integrations.
 
 ### PDF and Language Support
 
-* The current PDF export implementation is documented as Latin-1 only.
+* The current PDF export is documented as Latin-1 only.
 * Arabic characters may appear as question marks in exported PDFs.
-* Arabic-language PDF output requires an appropriate Unicode-capable font and export implementation.
+* Arabic PDF support requires an appropriate Unicode-capable font and export implementation.
 
 ### Research Retrieval
 
@@ -849,8 +666,8 @@ The following limitations are recorded in the current project description and sh
 ### Verification
 
 * Numeric comparisons do not automatically normalize units.
-* Differences in definitions or methodology may require additional research and careful interpretation.
-* Evidence quality depends on the available source content and the implemented evaluation rules.
+* Differences in definitions or methodology may require additional research and interpretation.
+* Evidence quality depends on the available source content and evaluation rules.
 
 ### Authentication and Account Management
 
@@ -859,36 +676,36 @@ The following limitations are recorded in the current project description and sh
 * Two-factor authentication is not implemented in the documented feature set.
 * Sessions are documented as stateless, without server-side revocation.
 
-See [`docs/UNVERIFIED.md`](docs/UNVERIFIED.md), [`docs/SECURITY.md`](docs/SECURITY.md), [`docs/EVIDENCE.md`](docs/EVIDENCE.md), and [`docs/TOOLS.md`](docs/TOOLS.md) for additional detail.
+See [`docs/UNVERIFIED.md`](docs/UNVERIFIED.md), [`docs/SECURITY.md`](docs/SECURITY.md), [`docs/EVIDENCE.md`](docs/EVIDENCE.md), and [`docs/TOOLS.md`](docs/TOOLS.md).
 
 ---
 
 ## Unverified Components
 
-The following areas require explicit runtime validation before they can be treated as working end to end:
+The following areas require explicit runtime validation before they can be treated as working end to end.
 
-| Area               | Validation required                                                             |
-| ------------------ | ------------------------------------------------------------------------------- |
-| PostgreSQL         | Apply migrations, validate constraints, and run repository integration tests.   |
-| FastAPI            | Start the application and exercise API routes.                                  |
-| SSE                | Verify event delivery, reconnect behavior, and terminal states.                 |
-| Celery and Redis   | Start the worker and validate queued research execution.                        |
-| Next.js            | Install dependencies, run the application, and execute a production build.      |
-| Docker             | Build images, start services, and validate health checks.                       |
-| External search    | Run queries through the configured live search provider.                        |
-| External LLM       | Validate model requests, structured output, errors, and usage reporting.        |
-| Full research flow | Execute a complete research run and verify traceability from sources to report. |
-| Report exports     | Validate content, citations, encoding, and output files.                        |
+| Area               | Validation required                                                           |
+| ------------------ | ----------------------------------------------------------------------------- |
+| PostgreSQL         | Apply migrations, validate constraints, and run repository integration tests. |
+| FastAPI            | Start the application and exercise API routes.                                |
+| SSE                | Verify event delivery, reconnect behavior, and terminal states.               |
+| Celery and Redis   | Start the worker and validate queued research execution.                      |
+| Next.js            | Install dependencies, run the application, and execute a production build.    |
+| Docker             | Build images, start services, and validate health checks.                     |
+| External search    | Run queries through the configured live search provider.                      |
+| External LLM       | Validate model requests, structured output, errors, and usage reporting.      |
+| Full research flow | Execute a complete run and trace report findings back to their sources.       |
+| Report exports     | Validate content, citations, encoding, and output files.                      |
 
-The absence of runtime validation does not necessarily mean a component is broken. It means its behavior has not yet been demonstrated under the relevant conditions.
+An unverified component is not necessarily broken; it means its behavior has not yet been demonstrated under the relevant conditions.
 
-See [`docs/UNVERIFIED.md`](docs/UNVERIFIED.md) for the exact outstanding checks and commands.
+See [`docs/UNVERIFIED.md`](docs/UNVERIFIED.md) for exact outstanding checks and commands.
 
 ---
 
 ## Roadmap
 
-Potential follow-up work includes:
+Potential future improvements include:
 
 * Unicode-capable PDF export with Arabic support.
 * Password reset and email verification.
@@ -898,26 +715,24 @@ Potential follow-up work includes:
 * JavaScript-rendered page support.
 * PDF document ingestion.
 * Numeric unit normalization for claim comparison.
-* Broader end-to-end testing across the complete infrastructure.
-* Additional production validation and deployment hardening.
+* Broader end-to-end testing.
+* Production validation and deployment hardening.
 
-This roadmap describes areas for improvement, not a claim that these features are already implemented.
+These items describe potential improvements, not features claimed to be complete.
 
 ---
 
-## Contributing
+## Repository
 
-Contributions and technical feedback are welcome.
+**GitHub:** https://github.com/fareselgohary2003/atlas-intelligence
 
-When contributing:
+---
 
-1. Keep evidence and claim integrity rules intact.
-2. Add regression tests for bugs and security issues.
-3. Do not introduce silent fallbacks from production to demo mode.
-4. Preserve explicit uncertainty and source traceability.
-5. Document new configuration variables.
-6. Update `docs/UNVERIFIED.md` when runtime validation changes.
-7. Avoid claiming tests passed unless they were actually executed.
+## Author
+
+**Fares Elgohary**
+
+GitHub: [@fareselgohary2003](https://github.com/fareselgohary2003)
 
 ---
 
@@ -925,7 +740,7 @@ When contributing:
 
 No license is asserted by this README.
 
-Before publishing the repository for public reuse, choose a license appropriate for the project and add the corresponding `LICENSE` file.
+Add an appropriate `LICENSE` file before distributing the repository for public reuse.
 
 ---
 

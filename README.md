@@ -9,10 +9,9 @@ without being grounded in a stored source.
 
 | Area | Status |
 |---|---|
-| Research engine, agents (9), tools, SSRF-safe fetching, evidence/claims/verification/conflicts, replanning, analyst, report builder + exports (MD/JSON/PDF/CSV with formula-injection guard), usage metering, security core (tokens, CSRF, rate limits, logging), deterministic demo, frontend logic | **Implemented and tested**: 256 Python tests + 9 Node tests executed, 0 failures. Clean Next.js 14 production build (16/16 routes). |
-| Executive Intelligence Views & UX | **Implemented and verified**: 3 Report view modes (Executive Tables Matrix, Visual Analytics with SVG gauges/charts, Narrative Document), In-app Source Reader modal for RFC 2606 `.invalid` and live sources, and Dashboard-embedded Report Matrix. |
-| API & Frontend Local Execution | **Verified live**: FastAPI on port 8001, Next.js on port 3000, SQLite database with seeded demo workspaces (`demo@atlas.dev`, `fareselgohary2003@gmail.com`). |
-| Real LLM / real web search | Adapters written; requires live `LLM_API_KEY` and `WEB_SEARCH_API_KEY` for live web extraction. |
+| Research engine, agents (9), tools, SSRF-safe fetching, evidence/claims/verification/conflicts, replanning, analyst, report builder + exports, usage metering, security core (tokens, CSRF, rate limits, logging), deterministic demo, frontend logic | **Implemented and tested here**: 214 Python tests + 9 Node tests executed, 0 failures (`scripts/run_tests.sh`) |
+| PostgreSQL schema/migrations (composite FKs, immutability triggers), SQL repositories, FastAPI routes + SSE, Celery/Redis worker, Next.js pages (live workspace, evidence graph, ...), Docker | **Written but NEVER executed** (no network/DB/Docker/npm packages in the authoring sandbox). 40 further test functions exist for them and have not run. See `docs/UNVERIFIED.md` for exact commands |
+| Real LLM / real web search | Adapters written; never run against a live model or the live Brave API |
 
 Do not treat the unverified rows as working until you have run the commands in `docs/UNVERIFIED.md`.
 
@@ -37,9 +36,7 @@ Question -> Research Manager (plan) -> specialised agents (parallel) -> ToolRegi
 - **Verification**: deterministic rules first (integrity, quote grounding, numeric grounding, independent corroboration, contradictions, freshness); an LLM judge is optional and only refines stance. Outcomes: supported, partially_supported, contradicted, insufficient_evidence.
 - **Conflicts**: classified before flagging. Different period/geography/definition/methodology/population = scope difference (explained), not a contradiction.
 - **Replanning**: reasons `INSUFFICIENT_EVIDENCE`, `VERIFICATION_FAILED`, `LOW_SOURCE_QUALITY`, `CONFLICT_DETECTED`, `MISSING_DIMENSION`; hard cap `MAX_REPLANS`; visible in the timeline.
-- **Reports**: every finding is a stored claim quoted verbatim with citations; claims without evidence are gaps; inferences are labelled INFERENCE/UNCERTAINTY and may not introduce numbers. Markdown/JSON/PDF/CSV export of an immutable version with formula injection protection.
-- **Executive Views & Tables**: Reports support 3 view modes: Executive Tables Matrix (filterable by section with full-text search), Visual Analytics (Grounding Rate, Verification Breakdown, Source Reliability, Market Metrics), and Narrative Document.
-- **In-App Source Inspection**: Stored source texts and extracted evidence quotes can be viewed in an in-app Source Reader modal, eliminating broken link issues on archived or demo domains (`.invalid`).
+- **Reports**: every finding is a stored claim quoted verbatim with citations; claims without evidence are gaps; inferences are labelled INFERENCE/UNCERTAINTY and may not introduce numbers. Markdown/JSON/PDF export of an immutable version.
 - **Security** (`docs/SECURITY.md`): httpOnly cookie sessions + CSRF, Redis-backed rate limits with safe fallback, SSRF protection on every redirect hop, RBAC, workspace/research isolation, secret redaction in logs.
 - **Observability**: structured JSON logs with request/research/task/agent/tool-execution ids; per-call LLM usage; audit log.
 

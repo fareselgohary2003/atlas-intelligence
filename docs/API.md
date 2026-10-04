@@ -32,10 +32,11 @@ Errors: 401 unauthenticated, 403 role not allowed / CSRF failure, 404 resource m
 | POST | `/api/research/{rid}/pause` | owner/admin/researcher | `pause` |  |
 | GET | `/api/research/{rid}/report` | any member | `get_report` |  |
 | POST | `/api/research/{rid}/report` | owner/admin/researcher | `generate` |  |
-| GET | `/api/research/{rid}/report/export` | any member | `export_report` |  |
+| GET | `/api/research/{rid}/report/export` | any member | `export_report` | Formats: `md`, `json`, `pdf`, `csv` (with UTF-8 BOM and formula injection protection) |
 | GET | `/api/research/{rid}/report/versions` | any member | `report_versions` |  |
 | POST | `/api/research/{rid}/resume` | owner/admin/researcher | `resume` |  |
 | GET | `/api/research/{rid}/sources` | any member | `sources` |  |
+| GET | `/api/research/{rid}/sources/{sid}` | any member | `source_detail` | Returns full archived text, metadata, and extracted quotes for in-app reader modal |
 | POST | `/api/research/{rid}/start` | owner/admin/researcher | `start` |  |
 | GET | `/api/research/{rid}/status` | any member | `status` |  |
 | GET | `/api/research/{rid}/tasks` | any member | `tasks` |  |
@@ -48,4 +49,4 @@ Errors: 401 unauthenticated, 403 role not allowed / CSRF failure, 404 resource m
 | DELETE | `/api/workspaces/{workspace_id}/members/{user_id}` | owner/admin | `remove_member` |  |
 | PATCH | `/api/workspaces/{workspace_id}/members/{user_id}` | owner/admin | `change_role` |  |
 
-40 endpoints.
+41 endpoints.

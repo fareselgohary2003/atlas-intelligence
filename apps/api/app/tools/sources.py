@@ -40,11 +40,18 @@ def content_hash(text: str) -> str:
 
 def classify_source_type(domain: str) -> str:
     """Heuristic by domain only. Callers with better knowledge (e.g. an agent) may override."""
-    if re.search(r"(^|\.)(gov|mil)(\.[a-z]{2})?$", domain) or re.search(r"(^|\.)go\.[a-z]{2}$", domain):
+    d = domain.lower()
+    if re.search(r"(^|\.)(gov|mil)(\.[a-z]{2})?$", d) or re.search(r"(^|\.)go\.[a-z]{2}$", d) or "regulat" in d or "ministry" in d:
         return "government"
-    if re.search(r"(^|\.)edu(\.[a-z]{2})?$", domain) or re.search(r"(^|\.)ac\.[a-z]{2}$", domain):
+    if re.search(r"(^|\.)edu(\.[a-z]{2})?$", d) or re.search(r"(^|\.)ac\.[a-z]{2}$", d) or "academic" in d or "univ" in d:
         return "academic"
-    if domain in FORUMS or any(domain.endswith("." + f) for f in FORUMS) or domain.startswith(("forum.", "community.")):
+    if "research" in d or "institute" in d or "stat" in d or "gartner" in d or "idc" in d or "survey" in d or "risk" in d:
+        return "research"
+    if "analyst" in d or "news" in d or "press" in d or "reuters" in d or "bloomberg" in d or "journal" in d:
+        return "news"
+    if "vendor" in d or "company" in d or "corp" in d or "enterprise" in d or "saas" in d:
+        return "company"
+    if d in FORUMS or any(d.endswith("." + f) for f in FORUMS) or d.startswith(("forum.", "community.")):
         return "forum"
     return "other"
 

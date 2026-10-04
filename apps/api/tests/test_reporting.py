@@ -252,7 +252,8 @@ class ReportServiceTests(unittest.TestCase):
     def test_export_formats_and_read_only_behaviour(self):
         self.svc.generate(self.sc)
         counts = (len(self.s.repo.list_claims("rA")), len(self.s.repo.list_evidence("rA")), len(self.s.repo.list_sources("rA")))
-        for fmt, ctype, name in (("md", "text/markdown", ".md"), ("json", "application/json", ".json"), ("pdf", "application/pdf", ".pdf")):
+        for fmt, ctype, name in (("md", "text/markdown", ".md"), ("json", "application/json", ".json"),
+                                  ("pdf", "application/pdf", ".pdf"), ("csv", "text/csv", ".csv")):
             payload, ct, fn = self.svc.export(self.sc, fmt)
             self.assertTrue(ct.startswith(ctype) and fn.endswith(name) and payload)
         self.assertEqual(counts, (len(self.s.repo.list_claims("rA")), len(self.s.repo.list_evidence("rA")), len(self.s.repo.list_sources("rA"))))
@@ -260,6 +261,36 @@ class ReportServiceTests(unittest.TestCase):
         with self.assertRaises(EvidenceError) as cm:
             self.svc.export(self.sc, "docx")
         self.assertEqual(cm.exception.code, "invalid")
+
+    def test_csv_export_structure_and_injection_safety(self):
+        """CSV must have UTF-8 BOM, required headers, and safely neutralise spreadsheet injection."""
+        import csv, io
+        from app.reporting.export import to_csv, _csv_safe
+
+        # Injection safety: any cell starting with =, +, -, @ must be tab-prefixed
+        for dangerous in ("=SUM(A1)", "+1+1", "-CMD", "@SUM"):
+            self.assertTrue(_csv_safe(dangerous).startswith("\t"), f"injection not defused: {dangerous!r}")
+        # Normal values are unchanged
+        for safe in ("hello", "123", "", None, "No formula here"):
+            result = _csv_safe(safe)
+            self.assertFalse(result.startswith("\t"), f"safe value incorrectly prefixed: {safe!r}")
+
+        # Build a minimal report and check CSV output
+        self.svc.generate(self.sc)
+        payload, ct, fn = self.svc.export(self.sc, "csv")
+        self.assertTrue(ct.startswith("text/csv"))
+        self.assertTrue(fn.endswith(".csv"))
+        self.assertIsInstance(payload, bytes)
+        # UTF-8 BOM must be present (for Excel compatibility)
+        self.assertTrue(payload.startswith(b"\xef\xbb\xbf"), "CSV missing UTF-8 BOM for Excel compatibility")
+        # Must parse as valid CSV
+        text = payload.decode("utf-8-sig")
+        reader = csv.reader(io.StringIO(text))
+        rows = list(reader)
+        self.assertTrue(len(rows) >= 1, "CSV must have at least a header row")
+        header = rows[0]
+        for required_col in ("Section", "Claim", "Status", "Confidence", "Citations"):
+            self.assertIn(required_col, header, f"Missing required CSV column: {required_col}")
 
     def test_audit_hook_runs_once_per_persisted_version(self):
         seen = []

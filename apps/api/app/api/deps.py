@@ -37,7 +37,11 @@ def current_user(request: Request, cred=Depends(bearer), db: Session = Depends(g
         raise HTTPException(401, "Invalid or expired session")
     if not cred and request.method not in SAFE_METHODS:
         origin = request.headers.get("origin")
-        if origin and origin not in settings.cors_origins.split(","):
+        allowed = {o.strip() for o in settings.cors_origins.split(",") if o.strip()} | {
+            "http://localhost:3000", "http://127.0.0.1:3000",
+            "http://localhost:3001", "http://127.0.0.1:3001",
+        }
+        if origin and origin not in allowed:
             raise HTTPException(403, "Untrusted origin")
         if not tokens.verify_csrf(settings.jwt_secret, claims["jti"], request.headers.get("X-CSRF-Token")):
             raise HTTPException(403, "CSRF validation failed")

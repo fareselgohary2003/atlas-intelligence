@@ -1,10 +1,13 @@
 "use client";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import ResearchTable from "@/components/ResearchTable";
 import Shell, { useSession } from "@/components/Shell";
 import { Card, Empty, Gate } from "@/components/ui";
 import { useApi } from "@/lib/useApi";
 import { formatCost, formatDuration, formatTokens, metric } from "@/lib/format.mjs";
+import ExecutiveReportTable from "@/components/views/ExecutiveReportTable";
+import ExecutiveVisualAnalytics from "@/components/views/ExecutiveVisualAnalytics";
 import {
   Database,
   FileText,
@@ -28,6 +31,8 @@ import {
   BarChart3,
   Layers,
   Network,
+  BookOpen,
+  Table as TableIcon,
 } from "lucide-react";
 
 const TILE_ICONS: Record<string, any> = {
@@ -103,6 +108,113 @@ function MetricTile({ label, value, sub }: { label: string; value: string; sub?:
   );
 }
 
+function DashboardReportSection({ workspaceId }: { workspaceId?: string }) {
+  const projects = useApi<any>(workspaceId ? `/api/research?workspace_id=${workspaceId}&page_size=10` : null);
+  const items: any[] = Array.isArray(projects.data?.items)
+    ? projects.data.items
+    : Array.isArray(projects.data)
+    ? projects.data
+    : [];
+  const [selectedRid, setSelectedRid] = useState<string>("");
+
+  useEffect(() => {
+    if (items.length && !selectedRid) {
+      setSelectedRid(items[0].id);
+    }
+  }, [items, selectedRid]);
+
+  const report = useApi<any>(selectedRid ? `/api/research/${selectedRid}/report` : null);
+
+  if (items.length === 0) return null;
+
+  const currentProject = items.find((p: any) => p.id === selectedRid) || items[0];
+
+  return (
+    <div className="space-y-6 pt-4">
+      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-bd/60 pb-3">
+        <div className="space-y-0.5">
+          <div className="flex items-center gap-2">
+            <BookOpen className="h-4 w-4 text-primary" />
+            <h2 className="text-base font-bold text-tx tracking-tight">Executive Intelligence Report & Data Matrix</h2>
+          </div>
+          <p className="text-xs text-mut">
+            Synthesized multi-source findings, verified metrics, and citations across your research portfolio.
+          </p>
+        </div>
+
+        <div className="flex flex-wrap items-center gap-2.5">
+          {items.length > 1 && (
+            <select
+              value={selectedRid}
+              onChange={(e) => setSelectedRid(e.target.value)}
+              className="inp text-xs h-9 min-w-[240px] font-medium"
+              aria-label="Select research project report"
+            >
+              {items.map((p: any) => (
+                <option key={p.id} value={p.id}>
+                  {p.title}
+                </option>
+              ))}
+            </select>
+          )}
+
+          {selectedRid && (
+            <Link
+              href={`/research/${selectedRid}?tab=report`}
+              className="btn text-xs font-semibold flex items-center gap-1.5"
+            >
+              <span>Full Report View</span>
+              <ArrowUpRight className="h-3.5 w-3.5" />
+            </Link>
+          )}
+        </div>
+      </div>
+
+      <Gate q={report} rows={4}>
+        {(repData) => {
+          if (!repData?.content) {
+            return (
+              <Card className="p-8 text-center border-dashed">
+                <Empty
+                  title="Report Not Compiled Yet"
+                  hint={`Research project "${currentProject.title}" is in ${currentProject.status} state. Run the research engine to compile the executive report.`}
+                >
+                  <Link href={`/research/${selectedRid}`} className="btn-p mt-3 text-xs">
+                    Open Research Engine Workspace
+                  </Link>
+                </Empty>
+              </Card>
+            );
+          }
+
+          return (
+            <div className="space-y-6 animate-fade-in">
+              {/* Visual Analytics on Dashboard */}
+              <ExecutiveVisualAnalytics report={repData.content} />
+
+              {/* Full Interactive Findings Table on Dashboard */}
+              <Card className="p-5 border-bd shadow-sm">
+                <div className="flex items-center justify-between pb-3 border-b border-bd/60 mb-4">
+                  <div className="flex items-center gap-2">
+                    <TableIcon className="h-4 w-4 text-primary" />
+                    <h3 className="text-xs font-bold uppercase tracking-wider text-tx">
+                      Synthesized Findings & Extraction Matrix
+                    </h3>
+                  </div>
+                  <span className="text-xs text-mut font-medium">
+                    {repData.content.title}
+                  </span>
+                </div>
+                <ExecutiveReportTable report={repData.content} rid={selectedRid} />
+              </Card>
+            </div>
+          );
+        }}
+      </Gate>
+    </div>
+  );
+}
+
 function Body() {
   const { ws, user } = useSession();
   const s = useApi<any>(`/api/research/summary?workspace_id=${ws?.id}`);
@@ -119,7 +231,7 @@ function Body() {
               <span>Atlas Multi-Agent Deep Research Engine</span>
             </div>
             <h1 className="text-2xl font-bold tracking-tight text-tx">
-              Welcome back, {user?.name || "Fares Elgohary"}! 👋
+              Welcome back, {user?.name || "there"}! 👋
             </h1>
             <p className="text-sm text-mut max-w-xl">
               Turn complex enterprise and market questions into verified evidence graphs, multi-source fact checking, and executive reports.
@@ -171,17 +283,6 @@ function Body() {
               </Card>
             ) : (
               <>
-                {m.demo_projects > 0 && (
-                  <div className="mb-4 rounded-xl border border-amber-500/30 bg-amber-500/10 px-4 py-2.5 text-xs text-amber-700 dark:text-amber-300 flex flex-wrap items-center justify-between gap-2">
-                    <div className="flex items-center gap-2">
-                      <span className="rounded bg-amber-500/20 px-1.5 py-0.5 font-mono text-[10px] font-bold">SEEDED / DEMO DATA INCLUDED</span>
-                      <span>
-                        Workspace includes <strong>{m.demo_projects}</strong> demo project{m.demo_projects > 1 ? "s" : ""} ({m.demo_claims || 0} synthetic claim{m.demo_claims === 1 ? "" : "s"}).
-                      </span>
-                    </div>
-                    <span className="text-[11px] text-mut">Metrics below represent workspace-wide aggregate totals</span>
-                  </div>
-                )}
                 <div className="grid grid-cols-2 gap-3.5 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6">
                   <MetricTile label="Research projects" value={metric(m.total)} />
                   <MetricTile label="Active research" value={metric(m.active)} />
@@ -339,6 +440,9 @@ function Body() {
           }
         </Gate>
       </div>
+
+      {/* Latest Synthesized Executive Report & Findings Matrix Section */}
+      <DashboardReportSection workspaceId={ws?.id} />
 
       {/* Projects Table Section */}
       <div>

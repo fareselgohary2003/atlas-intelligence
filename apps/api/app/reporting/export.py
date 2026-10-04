@@ -1,7 +1,9 @@
 """Exports are pure renderings of a stored report; they never touch research records."""
+import csv
+import io
 import json
 
-FORMATS = ("md", "json", "pdf")
+FORMATS = ("md", "json", "pdf", "csv")
 
 
 def _cites(ns):
@@ -38,6 +40,67 @@ def to_markdown(report: dict) -> str:
                     f"  - A: {a['text']} {_cites(a['citations'])}"] + ([f"  - B: {b['text']} {_cites(b['citations'])}"] if b else [])
         out.append("")
     return "\n".join(out).rstrip() + "\n"
+
+
+_INJECTION_CHARS = ("=", "+", "-", "@")  # spreadsheet formula injection characters
+
+
+def _csv_safe(value: object) -> str:
+    """Prevent spreadsheet formula injection by prefixing dangerous leading characters with a tab."""
+    s = "" if value is None else str(value)
+    if s and s[0] in _INJECTION_CHARS:
+        s = "\t" + s
+    return s
+
+
+def to_csv(report: dict) -> bytes:
+    """Export findings as a UTF-8 CSV (BOM included for Excel compatibility).
+    Each row is one evidence-backed finding. Claims without evidence are listed in a trailing summary row.
+    Injection-safe: cells that would start a spreadsheet formula are prefixed with a tab character."""
+    buf = io.StringIO()
+    writer = csv.writer(buf, quoting=csv.QUOTE_ALL, lineterminator="\r\n")
+    writer.writerow([
+        "Section", "Claim", "Type", "Status", "Confidence",
+        "Citations", "Rationale", "Is Demo",
+        "Metric", "Value", "Unit", "Period", "Geography",
+    ])
+    for s in report.get("sections", []):
+        if s.get("key") in ("sources", "claims_appendix", "gaps", "conclusion", "methodology", "objective"):
+            continue
+        for f in s.get("findings", []):
+            attrs = f.get("attributes", {})
+            writer.writerow([
+                _csv_safe(s.get("title")),
+                _csv_safe(f.get("text")),
+                _csv_safe(f.get("claim_type")),
+                _csv_safe(f.get("status")),
+                _csv_safe(f.get("confidence")),
+                _csv_safe(", ".join(f"[{n}]" for n in f.get("citations", []))),
+                _csv_safe(f.get("rationale")),
+                _csv_safe("YES" if f.get("is_demo") else "NO"),
+                _csv_safe(attrs.get("metric")),
+                _csv_safe(attrs.get("value")),
+                _csv_safe(attrs.get("unit")),
+                _csv_safe(attrs.get("period")),
+                _csv_safe(attrs.get("geography")),
+            ])
+    # Trailing sources reference sheet
+    if report.get("citations"):
+        writer.writerow([])  # blank separator
+        writer.writerow(["[n]", "Title", "Publisher", "URL", "Source Type", "Published", "Retrieved", "Is Demo"])
+        for c in report["citations"]:
+            writer.writerow([
+                _csv_safe(f"[{c['n']}]"),
+                _csv_safe(c.get("title") or c.get("url")),
+                _csv_safe(c.get("publisher")),
+                _csv_safe(c.get("url")),
+                _csv_safe(c.get("source_type")),
+                _csv_safe(c.get("published_at") or "n/a"),
+                _csv_safe(c.get("retrieved_at")),
+                _csv_safe("YES" if c.get("is_demo") else "NO"),
+            ])
+    # Return UTF-8 with BOM for Microsoft Excel compatibility
+    return "\ufeff".encode("utf-8") + buf.getvalue().encode("utf-8")
 
 
 def _lines(report: dict) -> list:

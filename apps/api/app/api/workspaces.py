@@ -28,7 +28,7 @@ def create_workspace(body: WorkspaceIn, user: User = Depends(current_user), db: 
 @router.get("/{workspace_id}/members")
 def members(workspace_id: str, user: User = Depends(current_user), db: Session = Depends(get_db)):
     membership(db, user, workspace_id)
-    rows = db.scalars(select(WorkspaceMember).where(WorkspaceMember.workspace_id == uuid.UUID(workspace_id))).all()
+    rows = db.scalars(select(WorkspaceMember).where(WorkspaceMember.workspace_id == uuid.UUID(workspace_id)).order_by(WorkspaceMember.created_at)).all()
     return [{"user_id": str(m.user_id), "name": m.user.name, "email": m.user.email, "role": m.role} for m in rows]
 
 

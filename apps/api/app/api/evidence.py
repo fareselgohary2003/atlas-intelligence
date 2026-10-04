@@ -2,7 +2,7 @@
 Lists use bulk repository reads (one query per collection) and never include full source text."""
 from dataclasses import asdict
 
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, HTTPException, Query
 from fastapi.encoders import jsonable_encoder
 from sqlalchemy.orm import Session
 
@@ -36,6 +36,21 @@ def sources(rid: str, limit: int = Query(50, ge=1, le=200), offset: int = Query(
     rows = repo.list_sources(str(p.id), limit, offset)
     usage = repo.source_usage(str(p.id), [s.id for s in rows])
     return [{**_out(s, drop=("content_text",)), "evidence_count": usage[s.id]["evidence"], "claim_count": usage[s.id]["claims"]} for s in rows]
+
+
+@router.get("/{rid}/sources/{sid}")
+def source_detail(rid: str, sid: str, user: User = Depends(current_user), db: Session = Depends(get_db), repo=Depends(evidence_repo)):
+    p = load(db, user, rid)
+    s = repo.get_source(str(p.id), sid)
+    if s is None:
+        raise HTTPException(status_code=404, detail="Source not found")
+    evs = repo.list_evidence(str(p.id), limit=100)
+    source_evs = [e for e in evs if e.source_id == sid]
+    return {
+        **_out(s),
+        "content_text": s.content_text,
+        "evidence_excerpts": [_out(e) for e in source_evs]
+    }
 
 
 @router.get("/{rid}/evidence")

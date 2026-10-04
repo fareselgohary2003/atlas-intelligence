@@ -4,7 +4,7 @@ from typing import Protocol
 
 from app.evidence.domain import DuplicateError, EvidenceError, Scope, new_id, now
 from app.reporting.builder import ReportInputs, build_report
-from app.reporting.export import FORMATS, to_json, to_markdown, to_pdf
+from app.reporting.export import FORMATS, to_csv, to_json, to_markdown, to_pdf
 
 
 @dataclass
@@ -77,4 +77,6 @@ class ReportService:
             return to_markdown(rec.content), "text/markdown; charset=utf-8", stem + ".md"
         if fmt == "json":
             return to_json(rec.content), "application/json", stem + ".json"
+        if fmt == "csv":
+            return to_csv(rec.content), "text/csv; charset=utf-8", stem + ".csv"
         return to_pdf(rec.content), "application/pdf", stem + ".pdf"
